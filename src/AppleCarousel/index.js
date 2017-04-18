@@ -31,7 +31,7 @@ const Slide = styled.div`
 const IndicatorsWrapper = styled.div`
   position: absolute;
   width: 100%;
-  bottom: 60px;
+  bottom: ${(props) => props.indicatorsBottom}px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,7 +60,7 @@ const Indicator = styled.div`
 const InnerIndicator = styled.div`
   height: 2px;
   width: 0%;
-  ${(props) => props.isActive && `width: 100%`}
+  ${(props) => props.isActive && `width: ${props.animateIndicatorTo * 100}%;`}
   background: gray;
 `;
 
@@ -75,6 +75,9 @@ export default class AppleCarousel extends React.Component {
     breakPointRatio: PropTypes.number,
     activeItemIndex: PropTypes.number,
     parallaxValue: PropTypes.number,
+    indicatorsBottom: PropTypes.number,
+    enableTimer: PropTypes.bool,
+    timerInterval: PropTypes.number,
   };
 
   static defaultProps = {
@@ -82,6 +85,9 @@ export default class AppleCarousel extends React.Component {
     breakPointRatio: 0.5,
     activeItemIndex: 0,
     parallaxValue: -10,
+    indicatorsBottom: 30,
+    enableTimer: true,
+    timerInterval: 3000,
   };
 
   componentWillMount() {
@@ -91,7 +97,77 @@ export default class AppleCarousel extends React.Component {
       activeItemIndex: activeItemIndex,
       animateTo: activeItemIndex,
       containerWidth: 0,
+      animateIndicatorTo: 0,
+      lastTimerMillis: getCurrentMillis(),
     });
+  }
+
+  componentDidMount() {
+    const { enableTimer, timerInterval, renderSlides } = this.props;
+
+    if(enableTimer) {
+      window.requestAnimationFrame(() => this.runTimer({
+        timerInterval,
+        noOfSlides: renderSlides.length,
+      }));
+    }
+  }
+
+  componentWillUnmount() {
+    this.unmounted = true;
+  }
+
+  getTimerNextItem(activeItemIndex, noOfSlides) {
+    if(activeItemIndex === noOfSlides - 1) {
+      return 0;
+    } else {
+      return activeItemIndex + 1;
+    }
+  }
+
+  getTimerRatio({ lastTimerMillis, timerInterval }) {
+    // This value will be between 0 and 1
+    return (getCurrentMillis() - lastTimerMillis) / timerInterval;
+  }
+
+  gotoTimerNextItem({ activeItemIndex, noOfSlides }) {
+    this.setState({
+      activeItemIndex: this.getTimerNextItem(activeItemIndex, noOfSlides),
+      lastTimerMillis: getCurrentMillis(),
+    });
+  }
+
+  runTimer = ({ timerInterval, noOfSlides }) => {
+    if(this.unmounted) {
+      return;
+    }
+
+    if(this.state.stopTimer) {
+      this.setState({
+        animateIndicatorTo: 1,
+      });
+      return;
+    }
+
+    const timerRatio = this.getTimerRatio({
+      lastTimerMillis: this.state.lastTimerMillis,
+      timerInterval,
+    });
+
+    // Timer finished, go to next active item
+    if(timerRatio >= 1) {
+      this.gotoTimerNextItem({
+        noOfSlides,
+        activeItemIndex: this.state.activeItemIndex,
+      });
+    //
+    } else {
+      this.setState({
+        animateIndicatorTo: timerRatio,
+      });
+    }
+
+    window.requestAnimationFrame(() => this.runTimer({ timerInterval, noOfSlides }));
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -107,6 +183,7 @@ export default class AppleCarousel extends React.Component {
   onIndicatorClick = (index) => {
     this.setState({
       activeItemIndex: index,
+      stopTimer: true,
     });
   }
 
@@ -177,6 +254,7 @@ export default class AppleCarousel extends React.Component {
   swipeStart = (e) => {
     const { posX } = getPosition(e);
     this.setState({
+      stopTimer: true,
       startPosX: posX,
       startDragMillis: getCurrentMillis(),
     });
@@ -197,6 +275,7 @@ export default class AppleCarousel extends React.Component {
       breakPointRatio,
       parallaxValue,
       renderSlides,
+      indicatorsBottom,
     } = this.props;
 
     const {
@@ -206,6 +285,7 @@ export default class AppleCarousel extends React.Component {
       startDragMillis,
       startPosX,
       lastPosX,
+      animateIndicatorTo,
     } = this.state;
 
     const noOfSlides = renderSlides.length;
@@ -264,7 +344,7 @@ export default class AppleCarousel extends React.Component {
                 </Slide>
               ))}
             </Slides>
-            <IndicatorsWrapper>
+            <IndicatorsWrapper indicatorsBottom={indicatorsBottom}>
               <IndicatorsInnerWrapper>
                 {renderSlides.map((renderSlide, index) => (
                   <IndicatorWrapper
@@ -273,6 +353,7 @@ export default class AppleCarousel extends React.Component {
                   >
                     <Indicator>
                       <InnerIndicator
+                        animateIndicatorTo={animateIndicatorTo}
                         isActive={this.isIndicatorActive({
                           index,
                           activeItemIndex,

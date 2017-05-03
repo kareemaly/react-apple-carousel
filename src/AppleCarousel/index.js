@@ -66,17 +66,45 @@ const InnerIndicator = styled.div`
 
 export default class AppleCarousel extends React.Component {
   static propTypes = {
-    // Array of functions that return a react element
+    /**
+     * Array of functions that gets called with the following object to help
+     * you build a prallax animation.
+     * 
+     * `index: Integer` Index of the slide
+     * `slide: Number` Number between 0 and slides.length. use this to make the parallax animation.
+     * `activeItemIndex: Integer` The current active item index
+     * `containerWidth: Number` The container width
+     */
     renderSlides: PropTypes.arrayOf(PropTypes.func).isRequired,
+    /**
+     * React motion configurations.
+     * [More about this here](https://github.com/chenglou/react-motion#--spring-val-number-config-springhelperconfig--opaqueconfig)
+     */
     springConfig: PropTypes.shape({
       stiffness: PropTypes.number,
       damping: PropTypes.number,
     }),
+    /**
+     * Number between 0 and 1 used to see if the slide should be turned or not.
+     * For example setting this at 0.1 will switch the slide with the slightest
+     * user move.
+     */
     breakPointRatio: PropTypes.number,
+    /**
+     * Use this to set the active item index at mount.
+     */
     activeItemIndex: PropTypes.number,
-    parallaxValue: PropTypes.number,
+    /**
+     * Indicators bottom absolute position.
+     */
     indicatorsBottom: PropTypes.number,
+    /**
+     * Whether or not to enable timer.
+     */
     enableTimer: PropTypes.bool,
+    /**
+     * Only available if `enableTimer` is true.
+     */
     timerInterval: PropTypes.number,
   };
 
@@ -84,7 +112,6 @@ export default class AppleCarousel extends React.Component {
     springConfig: presets.noWobble,
     breakPointRatio: 0.5,
     activeItemIndex: 0,
-    parallaxValue: -10,
     indicatorsBottom: 30,
     enableTimer: true,
     timerInterval: 3000,
@@ -273,7 +300,6 @@ export default class AppleCarousel extends React.Component {
     const {
       springConfig,
       breakPointRatio,
-      parallaxValue,
       renderSlides,
       indicatorsBottom,
     } = this.props;

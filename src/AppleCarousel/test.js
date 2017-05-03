@@ -38,7 +38,6 @@ export default class Test extends React.Component {
     return (
       <Wrapper>
         <AppleCarousel
-          parallaxValue={parallaxValue}
           renderSlides={getRenderSlides(parallaxValue)}
         >
         </AppleCarousel>

@@ -46,7 +46,7 @@ const getComponentReadmeProps = (component) => {
     }
 
     readmeProps += `
-| ${propertyName}${propertyRequired ? '*' : ''} | ${propertyType} | ${propertyDefault} | ${propertyDescription.replace('|', ':').replace('\n', '<br />')} |`;
+| ${propertyName}${propertyRequired ? '*' : ''} | ${propertyType} | ${propertyDefault} | ${propertyDescription.replace('|', ':').replace(/\n/g,'<br />')} |`;
   }
 
   return readmeProps;

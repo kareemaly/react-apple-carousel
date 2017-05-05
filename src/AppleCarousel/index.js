@@ -95,6 +95,10 @@ export default class AppleCarousel extends React.Component {
      */
     activeItemIndex: PropTypes.number,
     /**
+     * Called when the active item change passing the item index
+     */
+    onActiveItemChange: PropTypes.func,
+    /**
      * Indicators bottom absolute position.
      */
     indicatorsBottom: PropTypes.number,
@@ -106,6 +110,10 @@ export default class AppleCarousel extends React.Component {
      * Only available if `enableTimer` is true.
      */
     timerInterval: PropTypes.number,
+    /**
+     * If true we will render default indicators that matches apple design.
+     */
+    enableIndicators: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -115,6 +123,7 @@ export default class AppleCarousel extends React.Component {
     indicatorsBottom: 30,
     enableTimer: true,
     timerInterval: 3000,
+    enableIndicators: true,
   };
 
   componentWillMount() {
@@ -199,7 +208,16 @@ export default class AppleCarousel extends React.Component {
 
   componentWillUpdate(nextProps, nextState) {
     if(nextState.activeItemIndex !== this.state.activeItemIndex) {
+      nextProps.onActiveItemChange && nextProps.onActiveItemChange(nextState.activeItemIndex);
       this.animateTo(nextState.activeItemIndex);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(nextProps.activeItemIndex !== this.state.activeItemIndex) {
+      this.setState({
+        activeItemIndex: nextProps.activeItemIndex,
+      });
     }
   }
 
@@ -302,6 +320,7 @@ export default class AppleCarousel extends React.Component {
       breakPointRatio,
       renderSlides,
       indicatorsBottom,
+      enableIndicators,
     } = this.props;
 
     const {
@@ -370,28 +389,31 @@ export default class AppleCarousel extends React.Component {
                 </Slide>
               ))}
             </Slides>
-            <IndicatorsWrapper indicatorsBottom={indicatorsBottom}>
-              <IndicatorsInnerWrapper>
-                {renderSlides.map((renderSlide, index) => (
-                  <IndicatorWrapper
-                    onClick={() => this.onIndicatorClick(index)}
-                    key={index}
-                  >
-                    <Indicator>
-                      <InnerIndicator
-                        animateIndicatorTo={animateIndicatorTo}
-                        isActive={this.isIndicatorActive({
-                          index,
-                          activeItemIndex,
-                          slide,
-                          breakPointRatio,
-                        })}
-                      />
-                    </Indicator>
-                  </IndicatorWrapper>
-                ))}
-              </IndicatorsInnerWrapper>
-            </IndicatorsWrapper>
+            {
+              enableIndicators &&
+              <IndicatorsWrapper indicatorsBottom={indicatorsBottom}>
+                <IndicatorsInnerWrapper>
+                  {renderSlides.map((renderSlide, index) => (
+                    <IndicatorWrapper
+                      onClick={() => this.onIndicatorClick(index)}
+                      key={index}
+                    >
+                      <Indicator>
+                        <InnerIndicator
+                          animateIndicatorTo={animateIndicatorTo}
+                          isActive={this.isIndicatorActive({
+                            index,
+                            activeItemIndex,
+                            slide,
+                            breakPointRatio,
+                          })}
+                        />
+                      </Indicator>
+                    </IndicatorWrapper>
+                  ))}
+                </IndicatorsInnerWrapper>
+              </IndicatorsWrapper>
+            }
           </Wrapper>
         )}
         </Motion>
